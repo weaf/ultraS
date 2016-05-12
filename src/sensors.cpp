@@ -111,19 +111,30 @@ uint8_t irSpeed(struct IR_PROXIMITY *irp)
 	return (uint8_t) speed;
 }
 
-enum Distance updateIrDistance(struct IR_PROXIMITY *irp)
+void updateIrDistance(struct IR_PROXIMITY *irp)
 {
-	if(irp->avg_remap <= irp->distance.close && irp->avg_remap > irp->distance.tooClose)
-	{
-		irp->current_distance = close;
-	}
+	/*Distance check
+	enums 								 far, uperMid, mid, lowerMid, near, close, tooClose
+	remaped sensore values 600, 350,			250, 200,			 150,  100,		   20
+	*/
 
-	else if(irp->avg_remap <= irp->distance.tooClose)
+	if(irp->avg_remap <= irp->distance.tooClose)
 	{
 		irp->current_distance = tooClose;
 	}
 
-	return far;
+	else if(irp->avg_remap > irp->distance.tooClose && irp->avg_remap <= irp->distance.close)
+	{
+		irp->current_distance = close;
+	}
+
+	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.near)
+	{
+		irp->current_distance = near;
+	}
+
+	else {irp->current_distance = far;}
+
 }
 
 

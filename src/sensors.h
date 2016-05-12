@@ -94,7 +94,7 @@ float getBatteryVoltage(struct BATSTAT *V);
 void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose);
 void updateIRP(struct IR_PROXIMITY *irp);
 uint8_t irSpeed(struct IR_PROXIMITY *irp);
-enum Distance updateIrDistance(struct IR_PROXIMITY *irp);
+void updateIrDistance(struct IR_PROXIMITY *irp);
 //***********************************************************************
 //*			Lidar														*
 //*																		*
