@@ -68,9 +68,9 @@ void setup()
 	 * That is Highest value will represent short distance, Lowest value will represent long distance
 	 ***************************************************************************/
 
-	initIRP(&ir_FrontLeft, FLPin, 600,350,250,200,150,100,20);
-	initIRP(&ir_FrontRight, FRPin, 600,350,250,200,150,100,20);
-	initIRP(&ir_FrontMiddle, FMPin, 600,350,250,200,150,100,20);
+	initIRP(&ir_FrontLeft, FLPin, 600,530,400,450,310,130,40);
+	initIRP(&ir_FrontRight, FRPin, 600,530,400,450,310,130,40);
+	initIRP(&ir_FrontMiddle, FMPin, 600,530,400,450,310,130,40);
 
 	pinMode(startBtn, INPUT);
 
@@ -109,21 +109,21 @@ void loop()
 *******************************************************************************/
 if(digitalRead(startBtn))
 {
-	/*
+
 	speed = irSpeed(&ir_FrontMiddle);
 	updateIrDistance(&ir_FrontMiddle);
 
 	// Obsticle close to front and right side
 	if(ir_FrontMiddle.current_distance == close  && ir_FrontRight.current_distance == close)
 	{
-		speed >> 1;
+		speed = speed >> 1;
 		motorDirection(&driver, Fleft, speed, speed);
 	}
 
 	//Obsitcle close to front and left side
 	else if(ir_FrontMiddle.current_distance == close  && ir_FrontLeft.current_distance == close)
 	{
-		speed >> 1;
+		speed = speed >> 1;
 		motorDirection(&driver, Fright, speed, speed);
 	}
 
@@ -139,14 +139,15 @@ if(digitalRead(startBtn))
 		{
 			motorDirection(&driver, Bright, speed, speed);
 		}
-		speed >> 1;
+		speed = speed >> 1;
 		motorDirection(&driver, Fright, speed, speed);
 	}
 
 
 
 	motorDirection(&driver, forward, speed, 0);
-	*/
+
+	/*
   speed = irSpeed(&ir_FrontMiddle);
 	Serial.print(" avg ");
 	Serial.print(ir_FrontMiddle.avg);
@@ -156,15 +157,15 @@ if(digitalRead(startBtn))
 	Serial.print(ir_FrontMiddle.current_distance);
 	Serial.print(" speed ");
 	Serial.println(speed);
-
+*/
 }
 
 else
 {
-	// motorDirection(&driver, stop, 100, 0);
-	// speed = irSpeed(&ir_FrontMiddle);
+	motorDirection(&driver, stop, 100, 0);
 	speed = irSpeed(&ir_FrontMiddle);
 
+/*
 	Serial.print(" avg ");
 	Serial.print(ir_FrontMiddle.avg);
 	Serial.print(" avg_remap ");
@@ -173,8 +174,7 @@ else
 	Serial.print(ir_FrontMiddle.current_distance);
 	Serial.print(" speed ");
 	Serial.println(speed);
-
-
+*/
 }
 
 

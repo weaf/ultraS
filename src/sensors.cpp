@@ -115,7 +115,7 @@ void updateIrDistance(struct IR_PROXIMITY *irp)
 {
 	/*Distance check
 	enums 								 far, uperMid, mid, lowerMid, near, close, tooClose
-	remaped sensore values 600, 350,			250, 200,			 150,  100,		   20
+	remaped sensore values 600,530,400,450,310,130,40
 	*/
 
 	if(irp->avg_remap <= irp->distance.tooClose)
@@ -128,9 +128,14 @@ void updateIrDistance(struct IR_PROXIMITY *irp)
 		irp->current_distance = close;
 	}
 
-	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.near)
+	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.lowerMid)
 	{
 		irp->current_distance = near;
+	}
+
+	else if(irp->avg_remap > irp->distance.lowerMid && irp->avg_remap <= irp->distance.uperMid)
+	{
+		irp->current_distance = mid;
 	}
 
 	else {irp->current_distance = far;}
