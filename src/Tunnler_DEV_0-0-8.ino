@@ -30,10 +30,12 @@ http://www.dsscircuits.com/index.php/articles/66-arduino-i2c-master-library
 #define		steeringB	11	// Front DC motor
 */
 
-#define	 FLPin	A1	// Left sharp ir-sensor sens pin
-#define	 FRPin	A2	// right sharp ir-sensor sens pin
+#define	 FLPin	A2	// Left sharp ir-sensor sens pin
+#define	 FRPin	A1	// right sharp ir-sensor sens pin
 #define	 FMPin	A3	// Front middle sharp ir-sensor sens pin
 #define	 startBtn 2
+
+void debug2(char* direction, char* Dist1Name, char* Dist2Name, enum Distance dist1, enum Distance dist2, int speed);
 
 Servo lidarServo;
 Blink led13;	// On board led Pin 13
@@ -45,7 +47,7 @@ Ir_proximity ir_FrontMiddle;
 enum Distance irDistance;
 
 int lidarDistance = 0, pos = 0;
-uint8_t speed = 0, turn = 0;
+int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
 
 void setup()
@@ -68,9 +70,9 @@ void setup()
 	 * That is Highest value will represent short distance, Lowest value will represent long distance
 	 ***************************************************************************/
 
-	initIRP(&ir_FrontLeft, FLPin, 600,530,400,450,310,130,40);
-	initIRP(&ir_FrontRight, FRPin, 600,530,400,450,310,130,40);
-	initIRP(&ir_FrontMiddle, FMPin, 600,530,400,450,310,130,40);
+	initIRP(&ir_FrontLeft, FLPin, 660,530,400,450,310,130,40);
+	initIRP(&ir_FrontRight, FRPin, 660,530,400,450,310,130,40);
+	initIRP(&ir_FrontMiddle, FMPin, 580,530,400,450,310,130,10);
 
 	pinMode(startBtn, INPUT);
 
@@ -84,12 +86,12 @@ SIGNAL(TIMER0_COMPA_vect)
 {
 	unsigned long currentMs = millis();
 	updateBlink(&led13, currentMs);
+	updateIRP(&ir_FrontMiddle);
 	updateIRP(&ir_FrontLeft);
 	updateIRP(&ir_FrontRight);
-	updateIRP(&ir_FrontMiddle);
+	updateIrDistance(&ir_FrontMiddle);
 	updateIrDistance(&ir_FrontLeft);
 	updateIrDistance(&ir_FrontRight);
-	updateIrDistance(&ir_FrontMiddle);
 }
 
 void loop()
@@ -111,70 +113,64 @@ if(digitalRead(startBtn))
 {
 
 	speed = irSpeed(&ir_FrontMiddle);
-	updateIrDistance(&ir_FrontMiddle);
 
 	// Obsticle close to front and right side
 	if(ir_FrontMiddle.current_distance == close  && ir_FrontRight.current_distance == close)
 	{
 		speed = speed >> 1;
 		motorDirection(&driver, Fleft, speed, speed);
-	}
+	debug2(" Front_Right "," FM_Dist: ", " FR_Dist: ", ir_FrontMiddle.current_distance, ir_FrontRight.current_distance, speed);
+
+}
 
 	//Obsitcle close to front and left side
 	else if(ir_FrontMiddle.current_distance == close  && ir_FrontLeft.current_distance == close)
 	{
 		speed = speed >> 1;
 		motorDirection(&driver, Fright, speed, speed);
+		debug2(" Front_Left "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
+
 	}
-
-
 
 	else if(ir_FrontMiddle.current_distance == tooClose)
 	{
-		motorDirection(&driver, stop, 100, 0); // Stopp immediatly
+
 
 		// decide which way to turn
 		// which side is closest to the obsticles
 		if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
 		{
-			motorDirection(&driver, Bright, speed, speed);
+			motorDirection(&driver, Bright, 150, 150);
+			debug2(" Backward_Right "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
+
 		}
-		speed = speed >> 1;
-		motorDirection(&driver, Fright, speed, speed);
+		else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
+		{
+			motorDirection(&driver, Bleft, 150, 150);
+			debug2(" Backward_Right "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontRight.current_distance, speed);
+		}
+		else
+		{
+			// motorDirection(&driver, stop, 100, 0); // Stopp immediatly
+			debug2(" stop "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
+		}
+
 	}
 
 
 
-	motorDirection(&driver, forward, speed, 0);
-
-	/*
-  speed = irSpeed(&ir_FrontMiddle);
-	Serial.print(" avg ");
-	Serial.print(ir_FrontMiddle.avg);
-	Serial.print(" avg_remap ");
-	Serial.print(ir_FrontMiddle.avg_remap);
-	Serial.print(" distance ");
-	Serial.print(ir_FrontMiddle.current_distance);
-	Serial.print(" speed ");
-	Serial.println(speed);
-*/
+	else
+	{
+		motorDirection(&driver, forward, speed, 0);
+		debug2(" Default "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
+	}
 }
 
 else
 {
 	motorDirection(&driver, stop, 100, 0);
-	speed = irSpeed(&ir_FrontMiddle);
+	// Debug1(&ir_FrontMiddle);
 
-/*
-	Serial.print(" avg ");
-	Serial.print(ir_FrontMiddle.avg);
-	Serial.print(" avg_remap ");
-	Serial.print(ir_FrontMiddle.avg_remap);
-	Serial.print(" distance ");
-	Serial.print(ir_FrontMiddle.current_distance);
-	Serial.print(" speed ");
-	Serial.println(speed);
-*/
 }
 
 
@@ -198,4 +194,15 @@ else
 */
 
 
+}
+
+void debug2(char* direction, char* Dist1Name, char* Dist2Name, enum Distance dist1, enum Distance dist2, int speed)
+{
+	Serial.print(direction);
+	Serial.print(Dist1Name);
+	Serial.print(dist1);
+	Serial.print(Dist2Name);
+	Serial.print(dist2);
+	Serial.print(" Speed: ");
+	Serial.println(speed);
 }

@@ -76,6 +76,9 @@ void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, i
 	irp->distance.lowerMid = _lowerMid;
 	irp->distance.close = _close;
 	irp->distance.tooClose = _tooClose;
+
+	irp->k = 1/(float)irp->distance.far; // factor used to calculate pwm speed corresponding to distace
+	irp->MaxPlusMin = (irp->distance.far + irp->distance.tooClose);
 }
 
 void updateIRP(struct IR_PROXIMITY *irp)
@@ -89,6 +92,8 @@ void updateIRP(struct IR_PROXIMITY *irp)
 		irp->avg = irp->temp_avg/N_SAMPLES; // calculates the avarage
 		irp->temp_avg = 0;
 
+		// REmapping:remap = max_val + min_val - current_val
+		irp->avg_remap = irp->MaxPlusMin - irp->avg;
 	}
 }
 
@@ -96,17 +101,14 @@ uint8_t irSpeed(struct IR_PROXIMITY *irp)
 {
 	float k_avg = 0, speed  = 0;
 
-	// REmapping:remap = max_val + min_val - current_val
-	irp->avg_remap = (irp->distance.far + irp->distance.tooClose) - irp->avg;
-	if(!irp->calc_flag)
+	k_avg = irp->avg_remap * irp->k; // calculates the scale factor for the speed
+
+	if(k_avg > 1)
 	{
-		irp->k = 1/(float)irp->distance.far; // factor used to calculate pwm speed corresponding to distace
-		irp->calc_flag = 1;
+		k_avg = 1;
 	}
-
-	k_avg = irp->avg_remap * irp->k; // calculates the scale factor for teh speed
-
 	speed = k_avg * 255; // calculate the PWM value to be used
+
 
 	return (uint8_t) speed;
 }
@@ -118,24 +120,19 @@ void updateIrDistance(struct IR_PROXIMITY *irp)
 	remaped sensore values 600,530,400,450,310,130,40
 	*/
 
-	if(irp->avg_remap <= irp->distance.tooClose)
+	if(irp->avg_remap < irp->distance.close)
 	{
 		irp->current_distance = tooClose;
 	}
 
-	else if(irp->avg_remap > irp->distance.tooClose && irp->avg_remap <= irp->distance.close)
+	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.lowerMid)
 	{
 		irp->current_distance = close;
 	}
 
-	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.lowerMid)
-	{
-		irp->current_distance = near;
-	}
-
 	else if(irp->avg_remap > irp->distance.lowerMid && irp->avg_remap <= irp->distance.uperMid)
 	{
-		irp->current_distance = mid;
+		irp->current_distance = near;
 	}
 
 	else {irp->current_distance = far;}
@@ -198,7 +195,17 @@ void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, ui
 	}
 }
 
-//***********************************************************************
-//*			MAth functions												*
-//*																		*
-//***********************************************************************
+/* Debug functions, Uncomment when used*/
+
+void Debug1(struct IR_PROXIMITY *irp)
+{
+	Serial.print(" avg ");
+	Serial.print(irp->avg);
+	Serial.print(" avg_remap ");
+	Serial.print(irp->avg_remap);
+	Serial.print(" distance ");
+	Serial.print(irp->current_distance);
+	Serial.print(" speed ");
+	Serial.println(irSpeed(irp));
+
+}

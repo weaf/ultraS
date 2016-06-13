@@ -34,14 +34,15 @@ typedef struct S_DISTANCES
 typedef struct IR_PROXIMITY
 {
 	uint8_t Pin;		// Left sharp ir-sensor sens pin
-	uint8_t sample_counter;
-	uint8_t calc_flag;
+	uint8_t sample_counter; // calculates number of recorded samples
+	uint8_t calc_flag; // set the flag to do calculation only once
 
-	float rawValue;
-	float avg;
-	float k;
-	float temp_avg;
-	float avg_remap;
+	float rawValue;	// the raw value from the sensor
+	float avg;	// calculated average of the raw value
+	float k;	// 1/Max_Distance factor used to calculate pwm speed corresponding to distace
+	float MaxPlusMin; //to calculate Max_distance + Min_Distance
+	float temp_avg; // adds the raw values before calculating avg
+	float avg_remap; // remapp of the avg value
 
 	enum Distance current_distance;
 	struct S_DISTANCES distance;
@@ -111,6 +112,8 @@ void motorControl(struct MOTORDRIVER *driver, uint8_t A0_val, uint8_t A1_val, ui
 void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, uint8_t turn);
 
 
+/* Debug functions, Uncomment when used*/
+void Debug1(struct IR_PROXIMITY *irp);
 
 #ifdef __cplusplus
 }
