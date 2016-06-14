@@ -170,7 +170,7 @@ void motorControl(struct MOTORDRIVER *driver, uint8_t A0_val, uint8_t A1_val, ui
 //void motorDirection(struct MOTORDRIVER *driver, Direction dir)
 void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, uint8_t turn)
 {
-		switch (dir)
+	switch (dir)
 	{
 		case forward:	motorControl(driver, speed, 0, 0, 0);
 		break;

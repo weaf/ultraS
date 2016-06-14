@@ -70,52 +70,52 @@ typedef struct MOTORDRIVER
 	uint8_t HB0;
 	uint8_t HB1;
 
-//	Direction D;
-//	uint8_t speed;
-//	uint8_t turn;
+	//	Direction D;
+	//	uint8_t speed;
+	//	uint8_t turn;
 
 } MotorDriver;
 
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+	#endif
 
-//***********************************************************************
-//*			Battery														*
-//*																		*
-//***********************************************************************
-void initBatteryVoltage(struct BATSTAT *V, int _analogPin, float Vconst);
-float getBatteryVoltage(struct BATSTAT *V);
+	//***********************************************************************
+	//*			Battery														*
+	//*																		*
+	//***********************************************************************
+	void initBatteryVoltage(struct BATSTAT *V, int _analogPin, float Vconst);
+	float getBatteryVoltage(struct BATSTAT *V);
 
-//***********************************************************************
-//*			IR_PROXIMITY												*
-//*																		*
-//***********************************************************************
-void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose);
-void updateIRP(struct IR_PROXIMITY *irp);
-uint8_t irSpeed(struct IR_PROXIMITY *irp);
-void updateIrDistance(struct IR_PROXIMITY *irp);
-//***********************************************************************
-//*			Lidar														*
-//*																		*
-//***********************************************************************
-void initLidar();
-int getLidarDistance();
+	//***********************************************************************
+	//*			IR_PROXIMITY												*
+	//*																		*
+	//***********************************************************************
+	void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose);
+	void updateIRP(struct IR_PROXIMITY *irp);
+	uint8_t irSpeed(struct IR_PROXIMITY *irp);
+	void updateIrDistance(struct IR_PROXIMITY *irp);
+	//***********************************************************************
+	//*			Lidar														*
+	//*																		*
+	//***********************************************************************
+	void initLidar();
+	int getLidarDistance();
 
-//***********************************************************************
-//*			Motors														*
-//*																		*
-//***********************************************************************
-void initMotors(struct MOTORDRIVER *driver, uint8_t A0_Pin, uint8_t A1_Pin, uint8_t B0_Pin, uint8_t B1_Pin);
-void motorControl(struct MOTORDRIVER *driver, uint8_t A0_val, uint8_t A1_val, uint8_t B0_val, uint8_t B1_val);
-void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, uint8_t turn);
+	//***********************************************************************
+	//*			Motors														*
+	//*																		*
+	//***********************************************************************
+	void initMotors(struct MOTORDRIVER *driver, uint8_t A0_Pin, uint8_t A1_Pin, uint8_t B0_Pin, uint8_t B1_Pin);
+	void motorControl(struct MOTORDRIVER *driver, uint8_t A0_val, uint8_t A1_val, uint8_t B0_val, uint8_t B1_val);
+	void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, uint8_t turn);
 
 
-/* Debug functions, Uncomment when used*/
-void Debug1(struct IR_PROXIMITY *irp);
+	/* Debug functions, Uncomment when used*/
+	void Debug1(struct IR_PROXIMITY *irp);
 
-#ifdef __cplusplus
+	#ifdef __cplusplus
 }
 #endif
 

@@ -5,7 +5,7 @@
 
 void initBlink(struct BLINK *led, uint8_t _ledPin, long _onDuration, long _offDuration)
 {
-	
+
 	led->ledPin = _ledPin;
 	pinMode(_ledPin, OUTPUT);
 
@@ -22,7 +22,7 @@ void updateBlink(struct BLINK *led, unsigned long currentMs)
 	{
 		led->ledState = HIGH;	// Led On
 		led->previousMs = currentMs;	// Save the current time
-		digitalWrite(led->ledPin, led->ledState); 
+		digitalWrite(led->ledPin, led->ledState);
 	}
 	else if((led->ledState == HIGH) && (currentMs - led->previousMs >= led->onDuration))
 	{
