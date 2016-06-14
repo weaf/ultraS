@@ -119,8 +119,6 @@ void loop()
 		{
 			speed = speed/3;
 			motorDirection(&driver, Fleft, speed, speed);
-			debug2(" Front_Right "," FM_Dist: ", " FR_Dist: ", ir_FrontMiddle.current_distance, ir_FrontRight.current_distance, speed);
-
 		}
 
 		//Obsitcle close to front and left side
@@ -128,8 +126,6 @@ void loop()
 		{
 			//speed = speed >> 2;
 			motorDirection(&driver, Fright, speed, speed);
-			debug2(" Front_Left "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
-
 		}
 
 		else if(ir_FrontMiddle.current_distance == tooClose)
@@ -141,34 +137,29 @@ void loop()
 			// which side is closest to the obsticles
 			if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
 			{
-				while (ir_FrontMiddle.current_distance < near || ir_FrontRight.current_distance < close)
+				while (ir_FrontMiddle.current_distance < near || ir_FrontRight.current_distance <= tooClose)
 				{
 					motorDirection(&driver, Bright, 150, 150);
-					debug2(" Backward_Right "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
 				}
-				// motorDirection(&driver, Bright, 150, 150);
-				// debug2(" Backward_Right "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
-				// delay(500);
 			}
 
 			else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
 			{
 				motorDirection(&driver, Bleft, 150, 150);
-				debug2(" Backward_Right "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontRight.current_distance, speed);
 				delay(1000);
 			}
 			else
 			{
 				motorDirection(&driver, Bleft, 150, 150);
-				debug2(" stop "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
 				delay(1000);
 			}
 		}
 
+
+
 		else
 		{
 			motorDirection(&driver, forward, speed, 0);
-			debug2(" Default "," FM_Dist: ", " FL_Dist: ", ir_FrontMiddle.current_distance, ir_FrontLeft.current_distance, speed);
 		}
 	}
 
