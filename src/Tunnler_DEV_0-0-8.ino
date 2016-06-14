@@ -115,14 +115,14 @@ void loop()
 		speed = irSpeed(&ir_FrontMiddle);
 
 		// Obsticle close to front and right side
-		if(ir_FrontMiddle.current_distance == close  && ir_FrontRight.current_distance == close)
+		if(ir_FrontRight.current_distance == close)
 		{
 			speed = speed/3;
 			motorDirection(&driver, Fleft, speed, speed);
 		}
 
 		//Obsitcle close to front and left side
-		else if(ir_FrontMiddle.current_distance == close  && ir_FrontLeft.current_distance == close)
+		else if(ir_FrontLeft.current_distance == close)
 		{
 			//speed = speed >> 2;
 			motorDirection(&driver, Fright, speed, speed);
@@ -137,7 +137,7 @@ void loop()
 			// which side is closest to the obsticles
 			if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
 			{
-				while (ir_FrontMiddle.current_distance < near || ir_FrontRight.current_distance <= tooClose)
+				while (ir_FrontMiddle.current_distance < close || ir_FrontRight.current_distance <= close)
 				{
 					motorDirection(&driver, Bright, 150, 150);
 				}
@@ -154,8 +154,6 @@ void loop()
 				delay(1000);
 			}
 		}
-
-
 
 		else
 		{
