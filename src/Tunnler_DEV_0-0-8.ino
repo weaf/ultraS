@@ -165,6 +165,12 @@ void loop()
 	{
 		motorDirection(&driver, stop, 100, 0);
 		// Debug1(&ir_FrontMiddle);
+
+		Serial.print("raw_value: ");
+		Serial.print(ir_FrontMiddle.rawValue);
+		Serial.print(" avg: ");
+		Serial.println(ir_FrontMiddle.avg);
+
 	}
 
 
