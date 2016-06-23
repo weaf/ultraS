@@ -49,6 +49,7 @@ enum Distance irDistance;
 int lidarDistance = 0, pos = 0;
 int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
+char BTChoise;
 
 void setup()
 {
@@ -109,71 +110,90 @@ void loop()
 	*
 	* motorDirection(&driver, Direction, speed, turn)
 	*******************************************************************************/
-	if(digitalRead(startBtn))
+	BTChoise = Serial.read();        // read next available byte
+	/**************************
+	* BTChoise values
+	* 1 = start main program
+	* 2 = manual controling from external device (to be implemented)
+	* 3 = IR_Sharp sensors calibration
+	**************************/
+	if (BTChoise == 1)
 	{
-
-		speed = irSpeed(&ir_FrontMiddle);
-
-		// Obsticle close to front and right side
-		if(ir_FrontRight.current_distance == close)
+		if(digitalRead(startBtn))
 		{
-			speed = speed/3;
-			motorDirection(&driver, Fleft, speed, speed);
-		}
 
-		//Obsitcle close to front and left side
-		else if(ir_FrontLeft.current_distance == close)
-		{
-			//speed = speed >> 2;
-			motorDirection(&driver, Fright, speed, speed);
-		}
+			speed = irSpeed(&ir_FrontMiddle);
 
-		else if(ir_FrontMiddle.current_distance == tooClose)
-		{
-			motorDirection(&driver, stop, 200, 0); // Stopp immediatly
-			motorDirection(&driver, backward, 100, 0);
-			delay(100);
-			// decide which way to turn
-			// which side is closest to the obsticles
-			if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
+			// Obsticle close to front and right side
+			if(ir_FrontRight.current_distance == close)
 			{
-				while (ir_FrontMiddle.current_distance < close || ir_FrontRight.current_distance <= close)
+				speed = speed/3;
+				motorDirection(&driver, Fleft, speed, speed);
+			}
+
+			//Obsitcle close to front and left side
+			else if(ir_FrontLeft.current_distance == close)
+			{
+				//speed = speed >> 2;
+				motorDirection(&driver, Fright, speed, speed);
+			}
+
+			else if(ir_FrontMiddle.current_distance == tooClose)
+			{
+				motorDirection(&driver, stop, 200, 0); // Stopp immediatly
+				motorDirection(&driver, backward, 100, 0);
+				delay(100);
+				// decide which way to turn
+				// which side is closest to the obsticles
+				if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
 				{
-					motorDirection(&driver, Bright, 150, 150);
+					while (ir_FrontMiddle.current_distance < close || ir_FrontRight.current_distance <= close)
+					{
+						motorDirection(&driver, Bright, 150, 150);
+					}
+				}
+
+				else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
+				{
+					motorDirection(&driver, Bleft, 150, 150);
+					delay(1000);
+				}
+				else
+				{
+					motorDirection(&driver, Bleft, 150, 150);
+					delay(1000);
 				}
 			}
 
-			else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
-			{
-				motorDirection(&driver, Bleft, 150, 150);
-				delay(1000);
-			}
 			else
 			{
-				motorDirection(&driver, Bleft, 150, 150);
-				delay(1000);
+				motorDirection(&driver, forward, speed, 0);
 			}
 		}
 
 		else
 		{
-			motorDirection(&driver, forward, speed, 0);
+			motorDirection(&driver, stop, 100, 0);
+			// Debug1(&ir_FrontMiddle);
+
+			Serial.print("raw_value: ");
+			Serial.print(ir_FrontMiddle.rawValue);
+			Serial.print(" avg: ");
+			Serial.println(ir_FrontMiddle.avg);
 		}
-	}
+}
 
-	else
-	{
-		motorDirection(&driver, stop, 100, 0);
-		// Debug1(&ir_FrontMiddle);
+else if (BTChoise == 2)
+{
+		Serial.println("       Manual mode      ");
+		Serial.println("This mode is not implemeted yet");
+}
 
-		Serial.print("raw_value: ");
-		Serial.print(ir_FrontMiddle.rawValue);
-		Serial.print(" avg: ");
-		Serial.println(ir_FrontMiddle.avg);
-
-	}
-
-
+else if (BTChoise == 3)
+{
+		Serial.println("     Calibration mode      ");
+		Serial.println("To be done in the near feuture");
+}
 
 
 	/*
