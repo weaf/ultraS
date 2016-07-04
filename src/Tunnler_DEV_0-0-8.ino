@@ -71,9 +71,9 @@ void setup()
 	* That is Highest value will represent short distance, Lowest value will represent long distance
 	***************************************************************************/
 
-	initIRP(&ir_FrontLeft, FLPin, 660,530,400,450,310,130,40);
-	initIRP(&ir_FrontRight, FRPin, 660,530,400,450,310,130,40);
-	initIRP(&ir_FrontMiddle, FMPin, 580,530,400,450,310,250,10);
+	initIRP(&ir_FrontLeft, FLPin, 660,530,400,450,310,130,40, 10);
+	initIRP(&ir_FrontRight, FRPin, 660,530,400,450,310,130,40, 10);
+	initIRP(&ir_FrontMiddle, FMPin, 580,530,400,450,310,250,10, 10);
 
 	pinMode(startBtn, INPUT);
 
@@ -192,7 +192,22 @@ else if (BTChoise == 2)
 else if (BTChoise == 3)
 {
 		Serial.println("     Calibration mode      ");
-		Serial.println("To be done in the near feuture");
+		Serial.println("		  work ongoing				 ");
+
+		Serial.println("");
+		Serial.println("Type which sensor to calibrate");
+		Serial.println("*******************************");
+		Serial.println("* 1 = LF, 2 = MF, 3 = RF			*");
+		Serial.println("*******************************");
+
+		BTChoise = Serial.read();
+		switch (BTChoise) {
+			case 1:	calibrate(&ir_FrontLeft); break;
+			case 2:	calibrate(&ir_FrontRight); break;
+			case 3:	calibrate(&ir_FrontMiddle); break;
+		}
+
+
 }
 
 

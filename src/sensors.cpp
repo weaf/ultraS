@@ -65,15 +65,15 @@ int getLidarDistance()
 //*																		*
 //***********************************************************************
 
-void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose)
+void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose, uint8_t _n_samples)
 {
 	irp->Pin = irPin;		// Pin number the ir is attached to
-
+ 	irp->n_samples = _n_samples;
 	irp->distance.far = _far;
-	irp->distance.mid = _mid;
+	// irp->distance.mid = _mid;
 	irp->distance.near = _near;
-	irp->distance.uperMid = _uperMid;
-	irp->distance.lowerMid = _lowerMid;
+	// irp->distance.uperMid = _uperMid;
+	// irp->distance.lowerMid = _lowerMid;
 	irp->distance.close = _close;
 	irp->distance.tooClose = _tooClose;
 
@@ -86,10 +86,10 @@ void updateIRP(struct IR_PROXIMITY *irp)
 	irp->rawValue = analogRead(irp->Pin); 	// read analog value from assigned pin
 	irp->temp_avg = irp->temp_avg + irp->rawValue; // add analog value to a temp variable
 	irp->sample_counter++; // increas the number of read samples
-	if(irp->sample_counter == N_SAMPLES)
+	if(irp->sample_counter == irp->n_samples)
 	{
 		irp->sample_counter = 0;
-		irp->avg = irp->temp_avg/N_SAMPLES; // calculates the avarage
+		irp->avg = irp->temp_avg/irp->n_samples; // calculates the avarage
 		irp->temp_avg = 0;
 
 		// REmapping:remap = max_val + min_val - current_val
@@ -120,22 +120,32 @@ void updateIrDistance(struct IR_PROXIMITY *irp)
 	remaped sensore values 600,530,400,450,310,130,40
 	*/
 
-	if(irp->avg_remap < irp->distance.close)
+	if(irp->avg_remap <=  irp->distance.tooClose)
 	{
 		irp->current_distance = tooClose;
 	}
-
-	else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.lowerMid)
+	else if (irp->avg_remap > irp->distance.tooClose && irp->avg_remap <= irp->distance.close )
 	{
 		irp->current_distance = close;
 	}
-
-	else if(irp->avg_remap > irp->distance.lowerMid && irp->avg_remap <= irp->distance.uperMid)
+	else if (irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.near )
 	{
 		irp->current_distance = near;
 	}
 
 	else {irp->current_distance = far;}
+
+	// else if(irp->avg_remap > irp->distance.close && irp->avg_remap <= irp->distance.lowerMid)
+	// {
+	// 	irp->current_distance = close;
+	// }
+	//
+	// else if(irp->avg_remap > irp->distance.lowerMid && irp->avg_remap <= irp->distance.uperMid)
+	// {
+	// 	irp->current_distance = near;
+	// }
+	//
+	// else {irp->current_distance = far;}
 
 }
 
@@ -194,6 +204,81 @@ void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, ui
 		break;
 	}
 }
+
+//***********************************************************************
+//*			calibration														*
+//*																		*
+//***********************************************************************
+void calibrate(struct IR_PROXIMITY *irp)
+{
+	char BTChoise;
+	irp->n_samples = 20;
+
+	Serial.println(" Choose a distanse to calibrate ");
+	Serial.println(" 1 = far \n 2 = near \n 3 = close \n 4 = tooClose \n 5 = Exit ");
+	BTChoise = Serial.read();
+	if (BTChoise == 1)
+	{
+		Serial.println(" poit the sensor to a 'far distance' type 9 to start calibration ");
+		BTChoise = Serial.read();
+
+		if (BTChoise == 9) {
+			updateIRP(irp);
+			irp->distance.far = irp->avg_remap;
+		}
+	}
+
+	else if (BTChoise == 2)
+	{
+		Serial.println(" poit the sensor to a 'near distance' type 9 to start calibration ");
+		BTChoise = Serial.read();
+
+		if (BTChoise == 9) {
+			updateIRP(irp);
+			irp->distance.near = irp->avg_remap;
+		}
+	}
+
+	else if (BTChoise == 3)
+	{
+		Serial.println(" poit the sensor to a 'close distance' type 9 to start calibration ");
+		BTChoise = Serial.read();
+
+		if (BTChoise == 9) {
+			updateIRP(irp);
+			irp->distance.close = irp->avg_remap;
+		}
+	}
+
+	else if (BTChoise == 4)
+	{
+		Serial.println(" poit the sensor to a 'tooClose distance' type 9 to start calibration ");
+		BTChoise = Serial.read();
+
+		if (BTChoise == 9) {
+			updateIRP(irp);
+			irp->distance.tooClose = irp->avg_remap;
+		}
+	}
+
+	else if (BTChoise == 5)
+	{
+		return;
+	}
+
+	Serial.println(" Calibration finished, will do som calculations for spped factors... ");
+
+	irp->k = 1/(float)irp->distance.far; // factor used to calculate pwm speed corresponding to distace
+	irp->MaxPlusMin = (irp->distance.far + irp->distance.tooClose);
+
+	Serial.println(" Calculations finished ");
+	Serial.println(" Sensor are now Calibrated ");
+
+}
+
+
+
+
 
 /* Debug functions, Uncomment when used*/
 

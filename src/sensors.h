@@ -18,7 +18,7 @@ extern uint8_t NACKflag;		// Acknowledge flag.
 enum Direction{forward, backward, left, right, Fleft, Fright, Bleft, Bright, stop};
 enum Distance{far, uperMid, mid, lowerMid, near, close, tooClose};
 
-#define N_SAMPLES 10	// number of samples from IR to average
+// #define N_SAMPLES 10	// number of samples from IR to average
 
 typedef struct S_DISTANCES
 {
@@ -36,6 +36,7 @@ typedef struct IR_PROXIMITY
 	uint8_t Pin;		// Left sharp ir-sensor sens pin
 	uint8_t sample_counter; // calculates number of recorded samples
 	uint8_t calc_flag; // set the flag to do calculation only once
+	uint8_t n_samples;	// number of samples from IR to average
 
 	float rawValue;	// the raw value from the sensor
 	float avg;	// calculated average of the raw value
@@ -92,7 +93,7 @@ extern "C" {
 	//*			IR_PROXIMITY												*
 	//*																		*
 	//***********************************************************************
-	void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose);
+	void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose, uint8_t _n_samples);
 	void updateIRP(struct IR_PROXIMITY *irp);
 	uint8_t irSpeed(struct IR_PROXIMITY *irp);
 	void updateIrDistance(struct IR_PROXIMITY *irp);
@@ -114,6 +115,12 @@ extern "C" {
 
 	/* Debug functions, Uncomment when used*/
 	void Debug1(struct IR_PROXIMITY *irp);
+
+	//***********************************************************************
+	//*			calibration														*
+	//*																		*
+	//***********************************************************************
+	void calibrate(struct IR_PROXIMITY *irp);
 
 	#ifdef __cplusplus
 }
