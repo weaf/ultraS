@@ -1,23 +1,20 @@
+/****
+*   Tunnler robot.
+*
+* Pin configurations
+* batstat:	A0 				Returns battery status in voltage
+* irSensors:	A1 A2, A3		Sharp IR proximity sensors
+* led13:		13 				Onboard led
+* driver:		5, 6, 10, 11	DC motor pins
+
+* Using the 'Arduino I2C Master Library' from DSS Circuits:
+* http://www.dsscircuits.com/index.php/articles/66-arduino-i2c-master-library
+****/
+
 #include <Arduino.h>
-
-// Tunnler robot.
-
-/*
-
-Pin configurations
-batstat:	A0 				Returns battery status in voltage
-irSensors:	A1 A2, A3		Sharp IR proximity sensors
-led13:		13 				Onboard led
-driver:		5, 6, 10, 11	DC motor pins
-
-Using the 'Arduino I2C Master Library' from DSS Circuits:
-http://www.dsscircuits.com/index.php/articles/66-arduino-i2c-master-library
-
-
-*/
-#include "sensors.h"
 #include <I2C.h>
 #include <Servo.h>
+#include "sensors.h"
 #include "blink.h"
 
 
@@ -37,6 +34,7 @@ http://www.dsscircuits.com/index.php/articles/66-arduino-i2c-master-library
 
 void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name, enum Distance dist1, enum Distance dist2, int speed);
 
+
 Servo lidarServo;
 Blink led13;	// On board led Pin 13
 Batstat batstat;
@@ -44,12 +42,21 @@ MotorDriver driver;
 Ir_proximity ir_FrontLeft;
 Ir_proximity ir_FrontRight;
 Ir_proximity ir_FrontMiddle;
+init_ir_ee ram_irFL_val = {90,200,70,60};
+init_ir_ee ram_irFR_val;
+init_ir_ee ram_irFM_val;
+init_ir_ee EEMEM ee_irFL_val;
+init_ir_ee EEMEM ee_irFR_val;
+init_ir_ee EEMEM ee_irFM_val;
+
 enum Distance irDistance;
 
 int lidarDistance = 0, pos = 0;
 int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
 char BTChoise;
+
+int TESTVAR = 0;
 
 void setup()
 {
@@ -110,13 +117,14 @@ void loop()
 	*
 	* motorDirection(&driver, Direction, speed, turn)
 	*******************************************************************************/
-	BTChoise = Serial.read();        // read next available byte
+	// BTChoise = Serial.read();        // read next available byte
 	/**************************
 	* BTChoise values
 	* 1 = start main program
 	* 2 = manual controling from external device (to be implemented)
 	* 3 = IR_Sharp sensors calibration
 	**************************/
+	BTChoise = 1;
 	if (BTChoise == 1)
 	{
 		if(digitalRead(startBtn))
@@ -176,10 +184,37 @@ void loop()
 			motorDirection(&driver, stop, 100, 0);
 			// Debug1(&ir_FrontMiddle);
 
-			Serial.print("raw_value: ");
-			Serial.print(ir_FrontMiddle.rawValue);
-			Serial.print(" avg: ");
-			Serial.println(ir_FrontMiddle.avg);
+			// Serial.print("raw_value: ");
+			// Serial.print(ir_FrontMiddle.rawValue);
+			// Serial.print(" avg: ");
+			// Serial.println(ir_FrontMiddle.avg);
+
+			// EEPROM TEST
+			if (TESTVAR == 0)
+			{
+			 	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+			 	eeprom_busy_wait();
+			// 	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+			// 	eeprom_busy_wait();
+			// 	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+
+			eeprom_read_block(&ram_irFR_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+			// eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+			// eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+
+				TESTVAR = 1;
+			}
+
+			Serial.println(" FL Values  ");
+			Serial.print("far: ");
+			Serial.print(ram_irFR_val.far);
+			Serial.print(" near: ");
+			Serial.print(ram_irFR_val.near);
+			Serial.print(" close: ");
+			Serial.print(ram_irFR_val.close);
+			Serial.print(" tooClose: ");
+			Serial.print(ram_irFR_val.tooClose);
+
 		}
 }
 
@@ -202,11 +237,45 @@ else if (BTChoise == 3)
 
 		BTChoise = Serial.read();
 		switch (BTChoise) {
-			case 1:	calibrate(&ir_FrontLeft); break;
-			case 2:	calibrate(&ir_FrontRight); break;
-			case 3:	calibrate(&ir_FrontMiddle); break;
+			case 1:	calibrateIR(&ir_FrontLeft, &ram_irFL_val); break;
+			case 2:	calibrateIR(&ir_FrontRight, &ram_irFR_val); break;
+			case 3:	calibrateIR(&ir_FrontMiddle, &ram_irFM_val); break;
 		}
 
+		eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+		eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+		eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+
+}
+else if (BTChoise == 4)
+{
+	eeprom_busy_wait();
+	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+
+	Serial.print(" FL Values  ");
+	Serial.print("far: ");	Serial.print(ram_irFL_val.far);
+	Serial.print(" near: ");	Serial.print(ram_irFL_val.near);
+	Serial.print(" close: ");	Serial.print(ram_irFL_val.close);
+	Serial.println(" tooClose: ");	Serial.print(ram_irFL_val.tooClose);
+	Serial.println();
+
+	Serial.print(" FR Values  ");
+	Serial.print("far: ");	Serial.print(ram_irFR_val.far);
+	Serial.print(" near: ");	Serial.print(ram_irFR_val.near);
+	Serial.print(" close: ");	Serial.print(ram_irFR_val.close);
+	Serial.print(" tooClose: ");	Serial.print(ram_irFR_val.tooClose);
+	Serial.println();
+
+	Serial.print(" FM Values  ");
+	Serial.print("far: ");	Serial.print(ram_irFM_val.far);
+	Serial.print(" near: ");	Serial.print(ram_irFM_val.near);
+	Serial.print(" close: ");	Serial.print(ram_irFM_val.close);
+	Serial.print(" tooClose: ");	Serial.print(ram_irFM_val.tooClose);
+	Serial.println();
 
 }
 

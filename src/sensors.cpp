@@ -209,7 +209,7 @@ void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, ui
 //*			calibration														*
 //*																		*
 //***********************************************************************
-void calibrate(struct IR_PROXIMITY *irp)
+void calibrateIR(struct IR_PROXIMITY *irp, struct INIT_IR_EE *ee)
 {
 	char BTChoise;
 	irp->n_samples = 20;

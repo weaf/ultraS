@@ -5,6 +5,7 @@
 #endif
 
 #include <I2C.h>
+#include <avr/eeprom.h>
 #include "Arduino.h"
 
 // Lidar definition
@@ -50,7 +51,13 @@ typedef struct IR_PROXIMITY
 
 } Ir_proximity;
 
-
+typedef struct INIT_IR_EE // struct for eeprom
+{
+	uint16_t far;
+	uint16_t near;
+	uint16_t close;
+	uint16_t tooClose;
+}init_ir_ee;
 
 
 //Battery status definition
@@ -120,7 +127,7 @@ extern "C" {
 	//*			calibration														*
 	//*																		*
 	//***********************************************************************
-	void calibrate(struct IR_PROXIMITY *irp);
+	void calibrateIR(struct IR_PROXIMITY *irp, struct INIT_IR_EE *ee);
 
 	#ifdef __cplusplus
 }
