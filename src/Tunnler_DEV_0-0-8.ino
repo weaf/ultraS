@@ -33,7 +33,8 @@
 #define	 startBtn 2
 
 void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name, enum Distance dist1, enum Distance dist2, int speed);
-
+void readIrEE();
+void updateIrEE();
 
 Servo lidarServo;
 Blink led13;	// On board led Pin 13
@@ -42,8 +43,8 @@ MotorDriver driver;
 Ir_proximity ir_FrontLeft;
 Ir_proximity ir_FrontRight;
 Ir_proximity ir_FrontMiddle;
-init_ir_ee ram_irFL_val = {90,200,70,60};
-init_ir_ee ram_irFR_val;
+init_ir_ee ram_irFL_val = {45, 20, 36, 95};
+init_ir_ee ram_irFR_val = {1,2,3,4};
 init_ir_ee ram_irFM_val;
 init_ir_ee EEMEM ee_irFL_val;
 init_ir_ee EEMEM ee_irFR_val;
@@ -54,9 +55,8 @@ enum Distance irDistance;
 int lidarDistance = 0, pos = 0;
 int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
-char BTChoise;
-
-int TESTVAR = 0;
+char BTChoise = 0;
+uint8_t message = 0;
 
 void setup()
 {
@@ -77,6 +77,8 @@ void setup()
 	* The values is to be entered inverted. for example. If the value for short distance is 600. it is remaped to represent short distance.
 	* That is Highest value will represent short distance, Lowest value will represent long distance
 	***************************************************************************/
+
+
 
 	initIRP(&ir_FrontLeft, FLPin, 660,530,400,450,310,130,40, 10);
 	initIRP(&ir_FrontRight, FRPin, 660,530,400,450,310,130,40, 10);
@@ -117,14 +119,29 @@ void loop()
 	*
 	* motorDirection(&driver, Direction, speed, turn)
 	*******************************************************************************/
-	// BTChoise = Serial.read();        // read next available byte
+	if(!message)
+	{
+		Serial.println("What do you want to do?");
+		Serial.println("1: start automatic controll ");
+		Serial.println("2: start manual controll");
+		Serial.println("3: calibration mode");
+		Serial.println("4: view calibrated values");
+		message = 1;
+	}
+
+	BTChoise = Serial.read();        // read next available byte
+	Serial.print("BTChoise: ");
+	Serial.println(BTChoise);
+
 	/**************************
 	* BTChoise values
 	* 1 = start main program
 	* 2 = manual controling from external device (to be implemented)
 	* 3 = IR_Sharp sensors calibration
 	**************************/
-	BTChoise = 1;
+	// BTChoise = 1;
+
+
 	if (BTChoise == 1)
 	{
 		if(digitalRead(startBtn))
@@ -182,13 +199,14 @@ void loop()
 		else
 		{
 			motorDirection(&driver, stop, 100, 0);
-			// Debug1(&ir_FrontMiddle);
+			Debug1(&ir_FrontMiddle);
 
 			// Serial.print("raw_value: ");
 			// Serial.print(ir_FrontMiddle.rawValue);
 			// Serial.print(" avg: ");
 			// Serial.println(ir_FrontMiddle.avg);
 
+			/*
 			// EEPROM TEST
 			if (TESTVAR == 0)
 			{
@@ -198,14 +216,7 @@ void loop()
 			// 	eeprom_busy_wait();
 			// 	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
 
-			eeprom_read_block(&ram_irFR_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-			// eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-			// eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-
-				TESTVAR = 1;
-			}
-
-			Serial.println(" FL Values  ");
+			Serial.println(" FR Values Before eeprom read  ");
 			Serial.print("far: ");
 			Serial.print(ram_irFR_val.far);
 			Serial.print(" near: ");
@@ -213,19 +224,39 @@ void loop()
 			Serial.print(" close: ");
 			Serial.print(ram_irFR_val.close);
 			Serial.print(" tooClose: ");
-			Serial.print(ram_irFR_val.tooClose);
+			Serial.println(ram_irFR_val.tooClose);
+			delay(5000);
 
+			// eeprom_read_block(&ram_irFR_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+			// eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+			// eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+			readIrEE();
+			TESTVAR = 1;
+			}
+
+			Serial.println(" FR Values after eeprom read  ");
+			Serial.print("far: ");
+			Serial.print(ram_irFR_val.far);
+			Serial.print(" near: ");
+			Serial.print(ram_irFR_val.near);
+			Serial.print(" close: ");
+			Serial.print(ram_irFR_val.close);
+			Serial.print(" tooClose: ");
+			Serial.println(ram_irFR_val.tooClose);
+			delay(2000);
+			*/
 		}
-}
 
-else if (BTChoise == 2)
-{
-		Serial.println("       Manual mode      ");
-		Serial.println("This mode is not implemeted yet");
-}
+	}
 
-else if (BTChoise == 3)
-{
+	else if (BTChoise == 2)
+	{
+			Serial.println("       Manual mode      ");
+			Serial.println("This mode is not implemeted yet");
+	}
+
+	else if (BTChoise == 3)
+	{
 		Serial.println("     Calibration mode      ");
 		Serial.println("		  work ongoing				 ");
 
@@ -242,61 +273,56 @@ else if (BTChoise == 3)
 			case 3:	calibrateIR(&ir_FrontMiddle, &ram_irFM_val); break;
 		}
 
-		eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-		eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-		eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-
-}
-else if (BTChoise == 4)
-{
-	eeprom_busy_wait();
-	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-	eeprom_busy_wait();
-	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-	eeprom_busy_wait();
-	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-
-	Serial.print(" FL Values  ");
-	Serial.print("far: ");	Serial.print(ram_irFL_val.far);
-	Serial.print(" near: ");	Serial.print(ram_irFL_val.near);
-	Serial.print(" close: ");	Serial.print(ram_irFL_val.close);
-	Serial.println(" tooClose: ");	Serial.print(ram_irFL_val.tooClose);
-	Serial.println();
-
-	Serial.print(" FR Values  ");
-	Serial.print("far: ");	Serial.print(ram_irFR_val.far);
-	Serial.print(" near: ");	Serial.print(ram_irFR_val.near);
-	Serial.print(" close: ");	Serial.print(ram_irFR_val.close);
-	Serial.print(" tooClose: ");	Serial.print(ram_irFR_val.tooClose);
-	Serial.println();
-
-	Serial.print(" FM Values  ");
-	Serial.print("far: ");	Serial.print(ram_irFM_val.far);
-	Serial.print(" near: ");	Serial.print(ram_irFM_val.near);
-	Serial.print(" close: ");	Serial.print(ram_irFM_val.close);
-	Serial.print(" tooClose: ");	Serial.print(ram_irFM_val.tooClose);
-	Serial.println();
-
-}
+		updateIrEE();
 
 
-	/*
-	for(pos = 0; pos <= 180; pos++)
+	}
+
+	else if (BTChoise == 4)
+	{
+		readIrEE();
+
+		Serial.print(" FL Values  ");
+		Serial.print("far: ");	Serial.print(ram_irFL_val.far);
+		Serial.print(" near: ");	Serial.print(ram_irFL_val.near);
+		Serial.print(" close: ");	Serial.print(ram_irFL_val.close);
+		Serial.println(" tooClose: ");	Serial.print(ram_irFL_val.tooClose);
+		Serial.println();
+
+		Serial.print(" FR Values  ");
+		Serial.print("far: ");	Serial.print(ram_irFR_val.far);
+		Serial.print(" near: ");	Serial.print(ram_irFR_val.near);
+		Serial.print(" close: ");	Serial.print(ram_irFR_val.close);
+		Serial.print(" tooClose: ");	Serial.print(ram_irFR_val.tooClose);
+		Serial.println();
+
+		Serial.print(" FM Values  ");
+		Serial.print("far: ");	Serial.print(ram_irFM_val.far);
+		Serial.print(" near: ");	Serial.print(ram_irFM_val.near);
+		Serial.print(" close: ");	Serial.print(ram_irFM_val.close);
+		Serial.print(" tooClose: ");	Serial.print(ram_irFM_val.tooClose);
+		Serial.println();
+
+	}
+
+
+		/*
+		for(pos = 0; pos <= 180; pos++)
+		{
+		lidarServo.write(pos);
+		lidarDistance = getLidarDistance();
+		//	serialPrintRange(pos, distance);
+		delay(20);
+	}
+	for(pos = 180; pos >= 0; pos--)
 	{
 	lidarServo.write(pos);
 	lidarDistance = getLidarDistance();
-	//	serialPrintRange(pos, distance);
+	//serialPrintRange(pos, distance);
 	delay(20);
-}
-for(pos = 180; pos >= 0; pos--)
-{
-lidarServo.write(pos);
-lidarDistance = getLidarDistance();
-//serialPrintRange(pos, distance);
-delay(20);
-}
-*/
-
+	}
+	*/
+delay(1000);
 
 }
 
@@ -309,4 +335,23 @@ void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name,
 	Serial.print(dist2);
 	Serial.print(" Speed: ");
 	Serial.println(speed);
+}
+
+void updateIrEE()
+{
+	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+}
+
+void readIrEE()
+{
+	eeprom_busy_wait();
+	eeprom_read_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_busy_wait();
+	eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
 }
