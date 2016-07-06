@@ -129,9 +129,7 @@ void loop()
 		message = 1;
 	}
 
-	BTChoise = Serial.read();        // read next available byte
-	Serial.print("BTChoise: ");
-	Serial.println(BTChoise);
+	BTChoise = (char)Serial.read();        // read next available byte
 
 	/**************************
 	* BTChoise values
@@ -142,7 +140,7 @@ void loop()
 	// BTChoise = 1;
 
 
-	if (BTChoise == 1)
+	if (BTChoise == '1')
 	{
 		if(digitalRead(startBtn))
 		{
@@ -199,78 +197,37 @@ void loop()
 		else
 		{
 			motorDirection(&driver, stop, 100, 0);
-			Debug1(&ir_FrontMiddle);
-
-			// Serial.print("raw_value: ");
-			// Serial.print(ir_FrontMiddle.rawValue);
-			// Serial.print(" avg: ");
-			// Serial.println(ir_FrontMiddle.avg);
-
-			/*
-			// EEPROM TEST
-			if (TESTVAR == 0)
-			{
-			 	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-			 	eeprom_busy_wait();
-			// 	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-			// 	eeprom_busy_wait();
-			// 	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-
-			Serial.println(" FR Values Before eeprom read  ");
-			Serial.print("far: ");
-			Serial.print(ram_irFR_val.far);
-			Serial.print(" near: ");
-			Serial.print(ram_irFR_val.near);
-			Serial.print(" close: ");
-			Serial.print(ram_irFR_val.close);
-			Serial.print(" tooClose: ");
-			Serial.println(ram_irFR_val.tooClose);
-			delay(5000);
-
-			// eeprom_read_block(&ram_irFR_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-			// eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-			// eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-			readIrEE();
-			TESTVAR = 1;
-			}
-
-			Serial.println(" FR Values after eeprom read  ");
-			Serial.print("far: ");
-			Serial.print(ram_irFR_val.far);
-			Serial.print(" near: ");
-			Serial.print(ram_irFR_val.near);
-			Serial.print(" close: ");
-			Serial.print(ram_irFR_val.close);
-			Serial.print(" tooClose: ");
-			Serial.println(ram_irFR_val.tooClose);
-			delay(2000);
-			*/
+			// Debug1(&ir_FrontMiddle);
 		}
 
 	}
 
-	else if (BTChoise == 2)
+	if (BTChoise == '2')
 	{
 			Serial.println("       Manual mode      ");
 			Serial.println("This mode is not implemeted yet");
 	}
 
-	else if (BTChoise == 3)
+	if (BTChoise == '3')
 	{
-		Serial.println("     Calibration mode      ");
-		Serial.println("		  work ongoing				 ");
 
-		Serial.println("");
-		Serial.println("Type which sensor to calibrate");
-		Serial.println("*******************************");
-		Serial.println("* 1 = LF, 2 = MF, 3 = RF			*");
-		Serial.println("*******************************");
+			Serial.println("     Calibration mode      ");
+			Serial.println("		  work ongoing				 ");
 
-		BTChoise = Serial.read();
-		switch (BTChoise) {
-			case 1:	calibrateIR(&ir_FrontLeft, &ram_irFL_val); break;
-			case 2:	calibrateIR(&ir_FrontRight, &ram_irFR_val); break;
-			case 3:	calibrateIR(&ir_FrontMiddle, &ram_irFM_val); break;
+			Serial.println("");
+			Serial.println("Type which sensor to calibrate");
+			Serial.println("*******************************");
+			Serial.println("* 11 = LF, 22 = MF, 33 = RF, type q to quit	*");
+			Serial.println("*******************************");
+
+		while(BTChoise != 'q')
+		{
+			BTChoise = Serial.read();
+			switch (BTChoise) {
+				case 'l':	calibrateIR(&ir_FrontLeft, &ram_irFL_val); break;
+				case 'r':	calibrateIR(&ir_FrontRight, &ram_irFR_val); break;
+				case 'm':	calibrateIR(&ir_FrontMiddle, &ram_irFM_val); break;
+			}
 		}
 
 		updateIrEE();
@@ -278,7 +235,7 @@ void loop()
 
 	}
 
-	else if (BTChoise == 4)
+  if (BTChoise == '4')
 	{
 		readIrEE();
 
