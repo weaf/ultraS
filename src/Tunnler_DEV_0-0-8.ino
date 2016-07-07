@@ -43,19 +43,16 @@ MotorDriver driver;
 Ir_proximity ir_FrontLeft;
 Ir_proximity ir_FrontRight;
 Ir_proximity ir_FrontMiddle;
-init_ir_ee ram_irFL_val = {45, 20, 36, 95};
-init_ir_ee ram_irFR_val = {1,2,3,4};
-init_ir_ee ram_irFM_val;
-init_ir_ee EEMEM ee_irFL_val;
-init_ir_ee EEMEM ee_irFR_val;
-init_ir_ee EEMEM ee_irFM_val;
+S_distances EEMEM ee_irFL_val;
+S_distances EEMEM ee_irFR_val;
+S_distances EEMEM ee_irFM_val;
 
 enum Distance irDistance;
 
 int lidarDistance = 0, pos = 0;
 int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
-char BTChoise = 0;
+char BTChoise;
 uint8_t message = 0;
 
 void setup()
@@ -80,9 +77,9 @@ void setup()
 
 
 
-	initIRP(&ir_FrontLeft, FLPin, 660,530,400,450,310,130,40, 10);
-	initIRP(&ir_FrontRight, FRPin, 660,530,400,450,310,130,40, 10);
-	initIRP(&ir_FrontMiddle, FMPin, 580,530,400,450,310,250,10, 10);
+	initIRP(&ir_FrontLeft, FLPin, 660,400,310,40, 10);
+	initIRP(&ir_FrontRight, FRPin, 660,400,310,40, 10);
+	initIRP(&ir_FrontMiddle, FMPin, 580,400,310,10, 10);
 
 	pinMode(startBtn, INPUT);
 
@@ -126,6 +123,7 @@ void loop()
 		Serial.println("2: start manual controll");
 		Serial.println("3: calibration mode");
 		Serial.println("4: view calibrated values");
+		Serial.println("");
 		message = 1;
 	}
 
@@ -206,6 +204,7 @@ void loop()
 	{
 			Serial.println("       Manual mode      ");
 			Serial.println("This mode is not implemeted yet");
+			Serial.println("");
 	}
 
 	if (BTChoise == '3')
@@ -216,48 +215,53 @@ void loop()
 
 			Serial.println("");
 			Serial.println("Type which sensor to calibrate");
-			Serial.println("*******************************");
-			Serial.println("* 11 = LF, 22 = MF, 33 = RF, type q to quit	*");
-			Serial.println("*******************************");
+			Serial.println(" l = LF \n r = RF \n m = MF \n c = Cancel");
+			Serial.println("");
 
-		while(BTChoise != 'q')
+		while(BTChoise != 'c')
 		{
 			BTChoise = Serial.read();
 			switch (BTChoise) {
-				case 'l':	calibrateIR(&ir_FrontLeft, &ram_irFL_val); break;
-				case 'r':	calibrateIR(&ir_FrontRight, &ram_irFR_val); break;
-				case 'm':	calibrateIR(&ir_FrontMiddle, &ram_irFM_val); break;
+				case 'l':	calibrateIR(&ir_FrontLeft, 20); break;
+				case 'r':	calibrateIR(&ir_FrontRight, 20); break;
+				case 'm':	calibrateIR(&ir_FrontMiddle, 20); break;
 			}
 		}
-
-		updateIrEE();
-
-
+			if(BTChoise == 'c')
+			{
+				message = 0;
+				return;
+			}
+			else
+			{
+				Serial.println("updataing eeprom  ");
+				updateIrEE();
+			}
 	}
 
   if (BTChoise == '4')
 	{
 		readIrEE();
 
-		Serial.print(" FL Values  ");
-		Serial.print("far: ");	Serial.print(ram_irFL_val.far);
-		Serial.print(" near: ");	Serial.print(ram_irFL_val.near);
-		Serial.print(" close: ");	Serial.print(ram_irFL_val.close);
-		Serial.println(" tooClose: ");	Serial.print(ram_irFL_val.tooClose);
+		Serial.println("FL Values  ");
+		Serial.print("far: ");	Serial.print(ir_FrontLeft.distance.far);
+		Serial.print(" near: ");	Serial.print(ir_FrontLeft.distance.near);
+		Serial.print(" close: ");	Serial.print(ir_FrontLeft.distance.close);
+		Serial.print(" tooClose: ");	Serial.println(ir_FrontLeft.distance.tooClose);
 		Serial.println();
 
-		Serial.print(" FR Values  ");
-		Serial.print("far: ");	Serial.print(ram_irFR_val.far);
-		Serial.print(" near: ");	Serial.print(ram_irFR_val.near);
-		Serial.print(" close: ");	Serial.print(ram_irFR_val.close);
-		Serial.print(" tooClose: ");	Serial.print(ram_irFR_val.tooClose);
+		Serial.println("FR Values  ");
+		Serial.print("far: ");	Serial.print(ir_FrontRight.distance.far);
+		Serial.print(" near: ");	Serial.print(ir_FrontRight.distance.near);
+		Serial.print(" close: ");	Serial.print(ir_FrontRight.distance.close);
+		Serial.print(" tooClose: ");	Serial.println(ir_FrontRight.distance.tooClose);
 		Serial.println();
 
-		Serial.print(" FM Values  ");
-		Serial.print("far: ");	Serial.print(ram_irFM_val.far);
-		Serial.print(" near: ");	Serial.print(ram_irFM_val.near);
-		Serial.print(" close: ");	Serial.print(ram_irFM_val.close);
-		Serial.print(" tooClose: ");	Serial.print(ram_irFM_val.tooClose);
+		Serial.println("FM Values  ");
+		Serial.print("far: ");	Serial.print(ir_FrontMiddle.distance.far);
+		Serial.print(" near: ");	Serial.print(ir_FrontMiddle.distance.near);
+		Serial.print(" close: ");	Serial.print(ir_FrontMiddle.distance.close);
+		Serial.print(" tooClose: ");	Serial.println(ir_FrontMiddle.distance.tooClose);
 		Serial.println();
 
 	}
@@ -296,19 +300,37 @@ void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name,
 
 void updateIrEE()
 {
-	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(INIT_IR_EE));
 	eeprom_busy_wait();
-	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(INIT_IR_EE));
 	eeprom_busy_wait();
-	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(INIT_IR_EE));
 }
 
 void readIrEE()
 {
 	eeprom_busy_wait();
-	eeprom_read_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(INIT_IR_EE));
 	eeprom_busy_wait();
-	eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(INIT_IR_EE));
 	eeprom_busy_wait();
-	eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(INIT_IR_EE));
 }
+// void updateIrEE()
+// {
+// 	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+// 	eeprom_busy_wait();
+// 	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+// 	eeprom_busy_wait();
+// 	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+// }
+//
+// void readIrEE()
+// {
+// 	eeprom_busy_wait();
+// 	eeprom_read_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
+// 	eeprom_busy_wait();
+// 	eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
+// 	eeprom_busy_wait();
+// 	eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
+// }
