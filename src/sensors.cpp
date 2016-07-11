@@ -65,7 +65,7 @@ int getLidarDistance()
 //*																		*
 //***********************************************************************
 
-void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose, uint8_t _n_samples)
+void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far, int _near, int _close, int _tooClose, uint8_t _n_samples)
 {
 	irp->Pin = irPin;		// Pin number the ir is attached to
  	irp->n_samples = _n_samples;
@@ -209,75 +209,111 @@ void motorDirection(struct MOTORDRIVER *driver, Direction dir, uint8_t speed, ui
 //*			calibration														*
 //*																		*
 //***********************************************************************
-void calibrateIR(struct IR_PROXIMITY *irp, struct INIT_IR_EE *ee)
+void calibrateIR(struct IR_PROXIMITY *irp, uint8_t numOfSamples)
 {
-	char BTChoise;
-	irp->n_samples = 20;
-
-	Serial.println(" Choose a distanse to calibrate ");
-	Serial.println(" 1 = far \n 2 = near \n 3 = close \n 4 = tooClose \n 5 = Exit ");
-	BTChoise = Serial.read();
-	if (BTChoise == 1)
+	char choise = ' ';
+		char update[] = "Updating value...";
+	char updated[] = "Value updated";
+	uint8_t flag = 0;
+	irp->n_samples = numOfSamples;
+	while(choise != 'c')
 	{
-		Serial.println(" poit the sensor to a 'far distance' type 9 to start calibration ");
-		BTChoise = Serial.read();
+		if(!flag)
+		{
+			Serial.println(" Choose a distanse to calibrate ");
+			Serial.println(" 1 = far \n 2 = near \n 3 = close \n 4 = tooClose \n f = finished \n c = Cancel ");
+			Serial.println();
+			flag = 1;
+		}
+		while(!Serial.available());
+		choise = Serial.read();
 
-		if (BTChoise == 9) {
-			updateIRP(irp);
-			irp->distance.far = irp->avg_remap;
+		if (choise == '1')
+		{
+			Serial.println(" poit the sensor to a 'far distance' type 'u' to start calibration ");
+			Serial.println();
+
+			while(!Serial.available());
+			choise = Serial.read();
+			if (choise == 'u')
+			{
+				Serial.println(update);
+				updateIRP(irp);
+				irp->distance.far = irp->avg_remap;
+				Serial.println(updated);
+				flag = 0;
+			}
+		}
+		else if (choise == '2')
+		{
+			Serial.println(" poit the sensor to a 'near distance' type 'u' to start calibration ");
+			Serial.println();
+
+			while(!Serial.available());
+			choise = Serial.read();
+			if (choise == 'u')
+			{
+				Serial.println(update);
+				updateIRP(irp);
+				irp->distance.near = irp->avg_remap;
+				Serial.println(updated);
+				flag = 0;
+			}
+		}
+		else if (choise == '3')
+		{
+			Serial.println(" poit the sensor to a 'close distance' type 'u' to start calibration ");
+			Serial.println();
+			while(!Serial.available());
+			choise = Serial.read();
+			if (choise == 'u')
+			{
+				Serial.println(update);
+				updateIRP(irp);
+				irp->distance.close = irp->avg_remap;
+				Serial.println(updated);
+				flag = 0;
+			}
+		}
+		else if (choise == '4')
+		{
+			Serial.println(" poit the sensor to a 'tooClose distance' type 'u' to start calibration ");
+			Serial.println();
+			while(!Serial.available());
+			choise = Serial.read();
+			if (choise == 'u')
+			{
+				Serial.println(update);
+				updateIRP(irp);
+				irp->distance.tooClose = irp->avg_remap;
+				Serial.println(updated);
+				flag = 0;
+			}
+		}
+		else if(choise == 'f')
+		{
+			Serial.println(" Calibration finished, will do som calculations for spped factors... ");
+			Serial.println();
+
+			irp->k = 1/(float)irp->distance.far; // factor used to calculate pwm speed corresponding to distace
+			irp->MaxPlusMin = (irp->distance.far + irp->distance.tooClose);
+			irp->n_samples = 10;
+
+			Serial.println(" Calculations finished ");
+			Serial.println(" Sensor are now Calibrated ");
+			Serial.println();
+			flag = 0;
+			return;
+		}
+		else if(choise == 'c')
+		{
+			Serial.println(" Canceling calibration");
+			irp->n_samples = 10;
+			return;
 		}
 	}
-
-	else if (BTChoise == 2)
-	{
-		Serial.println(" poit the sensor to a 'near distance' type 9 to start calibration ");
-		BTChoise = Serial.read();
-
-		if (BTChoise == 9) {
-			updateIRP(irp);
-			irp->distance.near = irp->avg_remap;
-		}
-	}
-
-	else if (BTChoise == 3)
-	{
-		Serial.println(" poit the sensor to a 'close distance' type 9 to start calibration ");
-		BTChoise = Serial.read();
-
-		if (BTChoise == 9) {
-			updateIRP(irp);
-			irp->distance.close = irp->avg_remap;
-		}
-	}
-
-	else if (BTChoise == 4)
-	{
-		Serial.println(" poit the sensor to a 'tooClose distance' type 9 to start calibration ");
-		BTChoise = Serial.read();
-
-		if (BTChoise == 9) {
-			updateIRP(irp);
-			irp->distance.tooClose = irp->avg_remap;
-		}
-	}
-
-	else if (BTChoise == 5)
-	{
-		return;
-	}
-
-	Serial.println(" Calibration finished, will do som calculations for spped factors... ");
-
-	irp->k = 1/(float)irp->distance.far; // factor used to calculate pwm speed corresponding to distace
-	irp->MaxPlusMin = (irp->distance.far + irp->distance.tooClose);
-
-	Serial.println(" Calculations finished ");
-	Serial.println(" Sensor are now Calibrated ");
 
 }
-
-
-
 
 
 /* Debug functions, Uncomment when used*/
@@ -292,5 +328,6 @@ void Debug1(struct IR_PROXIMITY *irp)
 	Serial.print(irp->current_distance);
 	Serial.print(" speed ");
 	Serial.println(irSpeed(irp));
+	Serial.println();
 
 }

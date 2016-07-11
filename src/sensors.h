@@ -23,13 +23,10 @@ enum Distance{far, uperMid, mid, lowerMid, near, close, tooClose};
 
 typedef struct S_DISTANCES
 {
-	int far;
-	int mid;
-	int uperMid;
-	int lowerMid;
-	int near;
-	int	close;
-	int tooClose;
+	uint16_t far;
+	uint16_t near;
+	uint16_t close;
+	uint16_t tooClose;
 }S_distances;
 
 typedef struct IR_PROXIMITY
@@ -100,7 +97,7 @@ extern "C" {
 	//*			IR_PROXIMITY												*
 	//*																		*
 	//***********************************************************************
-	void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far,  int _uperMid, int _mid, int _lowerMid, int _near, int _close, int _tooClose, uint8_t _n_samples);
+	void initIRP(struct IR_PROXIMITY *irp, uint8_t irPin, int _far, int _near, int _close, int _tooClose, uint8_t _n_samples);
 	void updateIRP(struct IR_PROXIMITY *irp);
 	uint8_t irSpeed(struct IR_PROXIMITY *irp);
 	void updateIrDistance(struct IR_PROXIMITY *irp);
@@ -127,10 +124,10 @@ extern "C" {
 	//*			calibration														*
 	//*																		*
 	//***********************************************************************
-	void calibrateIR(struct IR_PROXIMITY *irp, struct INIT_IR_EE *ee);
+	void calibrateIR(struct IR_PROXIMITY *irp, uint8_t numOfSamples);
 
+
+	char waitSerial(char input);
 	#ifdef __cplusplus
 }
 #endif
-
-//Battery status definition end

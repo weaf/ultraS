@@ -83,8 +83,10 @@ void setup()
 
 	pinMode(startBtn, INPUT);
 
-	// 8 bit timer. Interrupt somewhere in the middle
-	OCR0A = 0xAF;
+	//using Timer0, 8 bit timer, max val 255.
+	//compare regiseter val = [ 16,000,000Hz/ (prescaler * desired interrupt frequency) ] - 1
+	// OCR0A = (16*10^6)/(64*)
+	OCR0A = 0x7F; //Interrupt somewhere in the middle decimal val = 127
 	TIMSK0 |= _BV(OCIE0A);
 }
 
@@ -209,22 +211,30 @@ void loop()
 
 	if (BTChoise == '3')
 	{
-
-			Serial.println("     Calibration mode      ");
-			Serial.println("		  work ongoing				 ");
-
-			Serial.println("");
-			Serial.println("Type which sensor to calibrate");
-			Serial.println(" l = LF \n r = RF \n m = MF \n c = Cancel");
-			Serial.println("");
-
+		message = 0;
 		while(BTChoise != 'c')
 		{
+			if(!message)
+			{
+				Serial.println("     Calibration mode      \n");
+				Serial.println("");
+				Serial.println("Type which sensor to calibrate");
+				Serial.println(" l = LF \n r = RF \n m = MF \n s = Save \n c = Cancel \n");
+				message = 1;
+			}
+
 			BTChoise = Serial.read();
 			switch (BTChoise) {
-				case 'l':	calibrateIR(&ir_FrontLeft, 20); break;
-				case 'r':	calibrateIR(&ir_FrontRight, 20); break;
-				case 'm':	calibrateIR(&ir_FrontMiddle, 20); break;
+				case 'l':	calibrateIR(&ir_FrontLeft, 20); message = 0; break;
+				case 'r':	calibrateIR(&ir_FrontRight, 20); message = 0;break;
+				case 'm':	calibrateIR(&ir_FrontMiddle, 20); message = 0; break;
+			}
+
+			if(BTChoise == 's')
+			{
+				Serial.println("saving values to eeprom \n ");
+				updateIrEE();
+				message = 0;
 			}
 		}
 			if(BTChoise == 'c')
@@ -232,11 +242,7 @@ void loop()
 				message = 0;
 				return;
 			}
-			else
-			{
-				Serial.println("updataing eeprom  ");
-				updateIrEE();
-			}
+
 	}
 
   if (BTChoise == '4')
