@@ -141,6 +141,7 @@ void loop()
 
 	if (BTChoise == '1')
 	{
+		Serial.println("Automatic mode, to exit type 'c' ");
 		while(BTChoise != 'c')
 		{
 			if(digitalRead(startBtn))
@@ -199,12 +200,12 @@ void loop()
 			else
 			{
 				motorDirection(&driver, stop, 100, 0);
-				// Debug1(&ir_FrontMiddle);
 			}
-			
+
 			BTChoise = Serial.read();
 			if(BTChoise == 'c')
 			{
+				motorDirection(&driver, stop, 100, 0);
 				message = 0;
 				return;
 			}
