@@ -314,20 +314,3 @@ void calibrateIR(struct IR_PROXIMITY *irp, uint8_t numOfSamples)
 	}
 
 }
-
-
-/* Debug functions, Uncomment when used*/
-
-void Debug1(struct IR_PROXIMITY *irp)
-{
-	Serial.print(" avg ");
-	Serial.print(irp->avg);
-	Serial.print(" avg_remap ");
-	Serial.print(irp->avg_remap);
-	Serial.print(" distance ");
-	Serial.print(irp->current_distance);
-	Serial.print(" speed ");
-	Serial.println(irSpeed(irp));
-	Serial.println();
-
-}

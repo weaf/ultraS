@@ -107,8 +107,6 @@ void loop()
 {
 
 	/*******************************************************************************
-	* Calibrated values for ir. left, right: 600 = break 500 = ok
-	* front:500 = stop, 200 = hard break,
 	*
 	* Availible directions
 	* forward, backward, left, right,
@@ -136,68 +134,81 @@ void loop()
 	* 1 = start main program
 	* 2 = manual controling from external device (to be implemented)
 	* 3 = IR_Sharp sensors calibration
+	* 4 = Show excicting saved values in eeprom
 	**************************/
 	// BTChoise = 1;
 
 
 	if (BTChoise == '1')
 	{
-		if(digitalRead(startBtn))
+		while(BTChoise != 'c')
 		{
-
-			speed = irSpeed(&ir_FrontMiddle);
-
-			// Obsticle close to front and right side
-			if(ir_FrontRight.current_distance == close)
+			if(digitalRead(startBtn))
 			{
-				speed = speed/3;
-				motorDirection(&driver, Fleft, speed, speed);
-			}
 
-			//Obsitcle close to front and left side
-			else if(ir_FrontLeft.current_distance == close)
-			{
-				//speed = speed >> 2;
-				motorDirection(&driver, Fright, speed, speed);
-			}
+				speed = irSpeed(&ir_FrontMiddle);
 
-			else if(ir_FrontMiddle.current_distance == tooClose)
-			{
-				motorDirection(&driver, stop, 200, 0); // Stopp immediatly
-				motorDirection(&driver, backward, 100, 0);
-				delay(100);
-				// decide which way to turn
-				// which side is closest to the obsticles
-				if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
+				// Obsticle close to front and right side
+				if(ir_FrontRight.current_distance == close)
 				{
-					while (ir_FrontMiddle.current_distance < close || ir_FrontRight.current_distance <= close)
+					speed = speed/3;
+					motorDirection(&driver, Fleft, speed, speed);
+				}
+
+				//Obsitcle close to front and left side
+				else if(ir_FrontLeft.current_distance == close)
+				{
+
+					motorDirection(&driver, Fright, speed, speed);
+
+				}
+
+				else if(ir_FrontMiddle.current_distance == tooClose)
+				{
+					motorDirection(&driver, stop, 200, 0); // Stopp immediatly
+					motorDirection(&driver, backward, 100, 0);
+					delay(100);
+					// decide which way to turn
+					// which side is closest to the obsticles
+					if(ir_FrontLeft.avg_remap < ir_FrontRight.avg_remap)
 					{
-						motorDirection(&driver, Bright, 150, 150);
+						while (ir_FrontMiddle.current_distance < close || ir_FrontRight.current_distance <= close)
+						{
+							motorDirection(&driver, Bright, 150, 150);
+						}
+					}
+
+					else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
+					{
+						motorDirection(&driver, Bleft, 150, 150);
+						delay(1000);
+					}
+					else
+					{
+						motorDirection(&driver, Bleft, 150, 150);
+						delay(1000);
 					}
 				}
 
-				else if (ir_FrontLeft.avg_remap > ir_FrontRight.avg_remap)
-				{
-					motorDirection(&driver, Bleft, 150, 150);
-					delay(1000);
-				}
 				else
 				{
-					motorDirection(&driver, Bleft, 150, 150);
-					delay(1000);
+					motorDirection(&driver, forward, speed, 0);
 				}
 			}
 
 			else
 			{
-				motorDirection(&driver, forward, speed, 0);
+				motorDirection(&driver, stop, 100, 0);
+				// Debug1(&ir_FrontMiddle);
 			}
-		}
+			
+			BTChoise = Serial.read();
+			if(BTChoise == 'c')
+			{
+				message = 0;
+				return;
+			}
 
-		else
-		{
-			motorDirection(&driver, stop, 100, 0);
-			// Debug1(&ir_FrontMiddle);
 		}
 
 	}
@@ -291,17 +302,6 @@ void loop()
 	*/
 delay(1000);
 
-}
-
-void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name, enum Distance dist1, enum Distance dist2, int speed)
-{
-	Serial.print(direction);
-	Serial.print(Dist1Name);
-	Serial.print(dist1);
-	Serial.print(Dist2Name);
-	Serial.print(dist2);
-	Serial.print(" Speed: ");
-	Serial.println(speed);
 }
 
 void updateIrEE()
