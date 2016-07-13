@@ -2,7 +2,7 @@
 
 #ifndef sensors_h
 #define sensors_h
-#endif
+
 
 #include <I2C.h>
 #include <avr/eeprom.h>
@@ -48,15 +48,6 @@ typedef struct IR_PROXIMITY
 
 } Ir_proximity;
 
-typedef struct INIT_IR_EE // struct for eeprom
-{
-	uint16_t far;
-	uint16_t near;
-	uint16_t close;
-	uint16_t tooClose;
-}init_ir_ee;
-
-
 //Battery status definition
 typedef struct BATSTAT
 {
@@ -74,10 +65,6 @@ typedef struct MOTORDRIVER
 	uint8_t HA1;
 	uint8_t HB0;
 	uint8_t HB1;
-
-	//	Direction D;
-	//	uint8_t speed;
-	//	uint8_t turn;
 
 } MotorDriver;
 
@@ -126,8 +113,7 @@ extern "C" {
 	//***********************************************************************
 	void calibrateIR(struct IR_PROXIMITY *irp, uint8_t numOfSamples);
 
-
-	char waitSerial(char input);
-	#ifdef __cplusplus
+#ifdef __cplusplus
 }
+#endif
 #endif

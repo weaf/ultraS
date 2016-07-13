@@ -91,7 +91,7 @@ void setup()
 }
 
 
-SIGNAL(TIMER0_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
 	unsigned long currentMs = millis();
 	updateBlink(&led13, currentMs);
@@ -269,7 +269,7 @@ void loop()
 		Serial.print(" close: ");	Serial.print(ir_FrontMiddle.distance.close);
 		Serial.print(" tooClose: ");	Serial.println(ir_FrontMiddle.distance.tooClose);
 		Serial.println();
-
+		message = 0;
 	}
 
 
@@ -306,37 +306,19 @@ void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name,
 
 void updateIrEE()
 {
-	eeprom_update_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(S_DISTANCES));
 	eeprom_busy_wait();
-	eeprom_update_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(S_DISTANCES));
 	eeprom_busy_wait();
-	eeprom_update_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(INIT_IR_EE));
+	eeprom_update_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(S_DISTANCES));
 }
 
 void readIrEE()
 {
 	eeprom_busy_wait();
-	eeprom_read_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontLeft.distance, &ee_irFL_val, sizeof(S_DISTANCES));
 	eeprom_busy_wait();
-	eeprom_read_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontRight.distance, &ee_irFR_val, sizeof(S_DISTANCES));
 	eeprom_busy_wait();
-	eeprom_read_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(INIT_IR_EE));
+	eeprom_read_block(&ir_FrontMiddle.distance, &ee_irFM_val, sizeof(S_DISTANCES));
 }
-// void updateIrEE()
-// {
-// 	eeprom_update_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-// 	eeprom_busy_wait();
-// 	eeprom_update_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-// 	eeprom_busy_wait();
-// 	eeprom_update_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-// }
-//
-// void readIrEE()
-// {
-// 	eeprom_busy_wait();
-// 	eeprom_read_block(&ram_irFL_val, &ee_irFL_val, sizeof(INIT_IR_EE));
-// 	eeprom_busy_wait();
-// 	eeprom_read_block(&ram_irFR_val, &ee_irFR_val, sizeof(INIT_IR_EE));
-// 	eeprom_busy_wait();
-// 	eeprom_read_block(&ram_irFM_val, &ee_irFM_val, sizeof(INIT_IR_EE));
-// }
