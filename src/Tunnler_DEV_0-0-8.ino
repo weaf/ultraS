@@ -31,6 +31,7 @@
 #define	 FRPin	A1	// right sharp ir-sensor sens pin
 #define	 FMPin	A3	// Front middle sharp ir-sensor sens pin
 #define	 startBtn 2
+#define	 DECREAS_SPEED(s,f)	((s)/(f)) // decreases the speed s with factor f
 
 void debug2(const char *direction, const char *Dist1Name, const char *Dist2Name, enum Distance dist1, enum Distance dist2, int speed);
 void readIrEE();
@@ -54,6 +55,7 @@ int speed = 0, turn = 0;
 uint8_t direction_flag = 1; //change when obsticles in front.
 char BTChoise;
 uint8_t message = 0;
+int prevMS, currMS;
 
 void setup()
 {
@@ -146,13 +148,51 @@ void loop()
 		{
 			if(digitalRead(startBtn))
 			{
+				Serial.println(ir_FrontMiddle.current_distance);
+				if(ir_FrontMiddle.current_distance == far)
+				{
+					speed = irSpeed(&ir_FrontMiddle);
+					speed = DECREAS_SPEED(speed, 2);
 
-				speed = irSpeed(&ir_FrontMiddle);
+					motorDirection(&driver, forward, speed, 0);
+				}
+				else if(ir_FrontMiddle.current_distance == close)
+				{
+					speed = irSpeed(&ir_FrontMiddle);
+					speed = DECREAS_SPEED(speed, 4);
+					motorDirection(&driver, forward, speed, 0);
+				}
+
+				else if(ir_FrontMiddle.current_distance == tooClose)
+				{
+					motorDirection(&driver, stop, 255, 0); // Stopp immediatly
+					prevMS = millis();
+
+					Serial.println("backward");
+
+					while(ir_FrontMiddle.current_distance != close)
+					{
+						//speed = irSpeed(&ir_FrontMiddle);
+
+						if ((currMS - prevMS) < 2000) // check difference between time isntead of delay function
+						{
+							motorDirection(&driver, backward, 100, 0);
+						}
+					}
+
+
+
+				}
+
+
+
+				/*
 
 				// Obsticle close to front and right side
 				if(ir_FrontRight.current_distance == close)
 				{
-					speed = speed/3;
+					speed = irSpeed(&ir_FrontMiddle);
+					speed = DECREAS_SPEED(speed, 2);
 					motorDirection(&driver, Fleft, speed, speed);
 				}
 
@@ -195,6 +235,8 @@ void loop()
 				{
 					motorDirection(&driver, forward, speed, 0);
 				}
+
+				*/
 			}
 
 			else
